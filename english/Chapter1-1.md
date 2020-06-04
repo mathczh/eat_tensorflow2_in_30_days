@@ -46,10 +46,12 @@ Survival label distribution:
 %matplotlib inline
 %config InlineBackend.figure_format = 'png'
 ax = dftrain_raw['Survived'].value_counts().plot(kind = 'bar',
-     figsize = (12,8),fontsize=15,rot = 0)
-ax.set_ylabel('Counts',fontsize = 15)
-ax.set_xlabel('Survived',fontsize = 15)
+     figsize = (12,8),fontsize=25,rot = 20)
+ax.set_ylabel('Counts',fontsize = 25)
+ax.set_xlabel('Survived',fontsize = 25)
 plt.show()
+### rot is the rotation for the x-axis-labels. 
+### value_counts() a method for the series class in pandas. 
 ```
 
 ![](../data/1-1-Label分布.jpg)
@@ -61,11 +63,13 @@ Age distribution:
 %matplotlib inline
 %config InlineBackend.figure_format = 'png'
 ax = dftrain_raw['Age'].plot(kind = 'hist',bins = 20,color= 'purple',
-                    figsize = (12,8),fontsize=15)
+                    figsize = (12,8),fontsize=25)
 
-ax.set_ylabel('Frequency',fontsize = 15)
-ax.set_xlabel('Age',fontsize = 15)
+ax.set_ylabel('Frequency',fontsize = 25)
+ax.set_xlabel('Age',fontsize = 25)
 plt.show()
+
+### bins denotes how many different groups we created. 
 ```
 
 ![](../data/1-1-年龄分布.jpg)
@@ -77,13 +81,15 @@ Correlation between age and survival label:
 %matplotlib inline
 %config InlineBackend.figure_format = 'png'
 ax = dftrain_raw.query('Survived == 0')['Age'].plot(kind = 'density',
-                      figsize = (12,8),fontsize=15)
+                      figsize = (12,8),fontsize=25)
 dftrain_raw.query('Survived == 1')['Age'].plot(kind = 'density',
-                      figsize = (12,8),fontsize=15)
-ax.legend(['Survived==0','Survived==1'],fontsize = 12)
-ax.set_ylabel('Density',fontsize = 15)
-ax.set_xlabel('Age',fontsize = 15)
+                      figsize = (12,8),fontsize=25)
+ax.legend(['Survived==0','Survived==1'],fontsize = 25)
+ax.set_ylabel('Density',fontsize = 25)
+ax.set_xlabel('Age',fontsize = 25)
 plt.show()
+
+### query to get the satisfied instances.
 ```
 
 ![](../data/1-1-年龄相关性.jpg)
@@ -100,15 +106,22 @@ def preprocessing(dfdata):
     dfPclass = pd.get_dummies(dfdata['Pclass'])
     dfPclass.columns = ['Pclass_' +str(x) for x in dfPclass.columns ]
     dfresult = pd.concat([dfresult,dfPclass],axis = 1)
-
+    
+    ### get_dummies convert categorical variables to indicator variable
+    ### concat: Concatenate pandas objects along a particular axis with optional set logic along the other axes./
+    ### axis = 0 default, along instance, 1 along the column. 
+    
     #Sex
     dfSex = pd.get_dummies(dfdata['Sex'])
     dfresult = pd.concat([dfresult,dfSex],axis = 1)
+    
 
     #Age
     dfresult['Age'] = dfdata['Age'].fillna(0)
     dfresult['Age_null'] = pd.isna(dfdata['Age']).astype('int32')
 
+    ### fillna(0) change na to 0; isna() to test whether it is na.
+    
     #SibSp,Parch,Fare
     dfresult['SibSp'] = dfdata['SibSp']
     dfresult['Parch'] = dfdata['Parch']
@@ -191,11 +204,26 @@ model.compile(optimizer='adam',
             loss='binary_crossentropy',
             metrics=['AUC'])
 
+### loss function is the objective function, while a metrics is \
+### similar to a loss function, except that the results from \
+### evaluating a metric are not used when training the model, so that \
+### it can be used to judge the performance of model. Besides, the metrics argument should be a list \
+### -- you model can have any number of metrics.
+### Scoring is single string or a callable to evaluate the predictions on the test set.\
+### is used to fund the combination of parameters. \
+
+#### If your model has multiple outputs, your can specify different losses and metrics for each output,\
+#### and you can modulate the contribution of each output to the total loss of the model. You will find \
+#### more details about this in the section "Passing data to multi-input, multi-output models".
+
 history = model.fit(x_train,y_train,
                     batch_size= 64,
                     epochs= 30,
-                    validation_split=0.2 #Split part of the training data for validation
+                    validation_split=0.2 #Split part of the training data for validation\
+                    ### can also use the external validation set to monitor the loss and metrics
                    )
+
+### The returned "history" object holds a record of the loss values and metric values during training
 ```
 
 ```
@@ -263,6 +291,9 @@ Epoch 30/30
 
 ```
 
+```python
+print(history.history)
+```
 
 ### 4. Model Evaluation
 
@@ -281,11 +312,19 @@ def plot_metric(history, metric):
     epochs = range(1, len(train_metrics) + 1)
     plt.plot(epochs, train_metrics, 'bo--')
     plt.plot(epochs, val_metrics, 'ro-')
-    plt.title('Training and validation '+ metric)
-    plt.xlabel("Epochs")
-    plt.ylabel(metric)
-    plt.legend(["train_"+metric, 'val_'+metric])
+    plt.title('Training and validation '+ metric, fontsize=25)
+    plt.xlabel("Epochs", fontsize=25)
+    plt.ylabel(metric, fontsize=25)
+    plt.xticks(fontsize=25)
+    plt.yticks(np.arange(0, 5, 1),fontsize=25)
+    plt.legend(["train_"+metric, 'val_'+metric], fontsize=25)
+
     plt.show()
+    
+### 'ro' for red circles. '-'	solid line style '--'	dashed line style \
+###  '-.'	dash-dot line style, ':'	dotted line style
+### plt return A list of Line2D objects representing the plotted data.\
+### while the plot in pandas return a matplotlib.axes.Axes
 ```
 
 ```python

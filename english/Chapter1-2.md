@@ -15,9 +15,12 @@ The files of cifar2 are organized as below:
 ![](../data/cifar2.jpg)
 
 ```python
+import tensorflow as tf
+print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
 
 ```
 
+<!-- #region -->
 There are two ways of image preparation in TensorFlow.
 
 The first one is constructing the image data generator using ImageDataGenerator in tf.keras.
@@ -26,14 +29,72 @@ The second one is constructing data pipeline using tf.data.Dataset and several m
 
 The former is simpler and is demonstrated in [this article](https://zhuanlan.zhihu.com/p/67466552) (in Chinese).
 
+```python
+train_datagen = ImageDataGenerator(
+            rescale = 1./255,
+            rotation_range=40,
+            width_shift_range=0.2,
+            height_shift_range=0.2,
+            shear_range=0.2,
+            zoom_range=0.2,
+            horizontal_flip=True,
+            fill_mode='nearest')
+
+
+test_datagen = ImageDataGenerator(rescale=1./255)
+```
+1. rotation_range is a value in degrees (0-180), a range within which to randomly rotate pictures
+2. width_shift and height_shift are ranges (as a fraction of total width or height) within which to randomly translate pictures vertically or horizontally rescale is a value by which we will multiply the data before any other processing. Our original images consist in RGB coefficients in the 0-255, but such values would be too high for our models to process (given a typical learning rate), so we target values between 0 and 1 instead by scaling with a 1/255. factor.
+3. shear_range is for randomly applying shearing transformations
+4. zoom_range is for randomly zooming inside pictures
+5. horizontal_flip is for randomly flipping half of the images horizontally --relevant when there are no assumptions of horizontal assymetry (e.g. real-world pictures).
+6. fill_mode is the strategy used for filling in newly created pixels, which can appear after a rotation or a width/height shift.
+
+We only apply these for the training data. 
+
+For more detailed explanation, please see this [website](https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html).
+
 The latter is the original method of TensorFlow, which is more flexible with possible better performance with proper usage.
 
 Below is the introduction to the second method.
 
+<!-- #endregion -->
 
 ```python
-import tensorflow as tf 
-from tensorflow.keras import datasets,layers,models
+import tensorflow as tf
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+  try:
+    # Currently, memory growth needs to be the same across GPUs
+    for gpu in gpus:
+      tf.config.experimental.set_memory_growth(gpu, True)
+    logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+  except RuntimeError as e:
+    # Memory growth must be set before GPUs have been initialized
+    print(e)
+    
+### this is required, otherwise, there is an error: Could not create cudnn handle: CUDNN_STATUS_INTERNAL_ERROR
+```
+
+```python
+
+from tensorflow.keras import datasets,layers,models, Sequential, backend
+# import tensorflow as tf 
+# from tensorflow.compat.v2 import InteractiveSession
+# config = tf.ConfigProto()
+# config.gpu_options.allow_growth = True
+# session = InteractiveSession(config=config)
+
+# backend.clear_session()
+import os
+os.environ['CUDA_VISIBLE_DEVICES']='0'
+
+
+# gpus= tf.config.list_physical_devices('GPU') # tf2.1版本该函数不再是experimental
+# print(gpus) # 前面限定了只使用GPU1(索引是从0开始的,本机有2张RTX2080显卡)
+# tf.config.experimental.set_memory_growth(gpus[0], True)
+
 
 BATCH_SIZE = 100
 
@@ -45,6 +106,9 @@ def load_image(img_path,size = (32,32)):
     img = tf.image.resize(img,size)/255.0
     return(img,label)
 
+### use the file name to define the label
+### tf.io.read_file returns a tensor of string.
+### tf.image.resize() has multiple methods.
 ```
 
 ```python
@@ -57,8 +121,15 @@ ds_train = tf.data.Dataset.list_files("../data/cifar2/train/*/*.jpg") \
 ds_test = tf.data.Dataset.list_files("../data/cifar2/test/*/*.jpg") \
            .map(load_image, num_parallel_calls=tf.data.experimental.AUTOTUNE) \
            .batch(BATCH_SIZE) \
-           .prefetch(tf.data.experimental.AUTOTUNE)  
+           .prefetch(tf.data.experimental.AUTOTUNE)
 
+### Use the basic functions to handle the raw data.
+### tf.data.Dataset.list_files() A dataset of all files matching one or more glob patterns.
+### tf.data.experimental.AUTOTUNE will prompt the tf.data runtime to tune the value dynamically at runtime.
+### Shuffle(): The dataset fills a buffer with buffer_size elements,\
+### then randomly samples elements from this buffer, replacing the selected elements with new elements.\
+### For perfect shuffling, a buffer size greater than or equal to the full size of the dataset is required. 
+### Creates a Dataset that prefetches elements from this dataset. 
 ```
 
 ```python
@@ -77,6 +148,10 @@ for i,(img,label) in enumerate(ds_train.unbatch().take(9)):
     ax.set_yticks([]) 
 plt.show()
 
+### axesan axes.SubplotBase subclass of Axes (or a subclass of Axes)
+### The axes of the subplot. The returned axes base class depends on the projection used.
+### It is Axes if rectilinear projection are used and projections.polar.PolarAxes if polar projection are used. 
+### The returned axes is then a subplot subclass of the base class.
 ```
 
 ![](../data/1-2-图片预览.jpg)
@@ -84,6 +159,8 @@ plt.show()
 ```python
 for x,y in ds_train.take(1):
     print(x.shape,y.shape)
+    
+### take: Creates a Dataset with at most count elements from this dataset.
 ```
 
 ```
@@ -149,7 +226,15 @@ _________________________________________________________________
 ```
 
 ```python
+import tensorflow as tf 
 
+if tf.test.gpu_device_name(): 
+    print('Default GPU Device:\
+    {}'.format(tf.test.gpu_device_name()))
+else:
+   print("Please install GPU version of TF")
+
+print(tf.__version__)
 ```
 
 ### 3. Model Training
@@ -159,16 +244,17 @@ There are three usual ways for model training: use internal function fit, use in
 
 ```python
 import datetime
-import os
+# import os
 
-stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-logdir = os.path.join('data', 'autograph', stamp)
-
-## We recommend using pathlib under Python3
-# from pathlib import Path
 # stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-# logdir = str(Path('../data/autograph/' + stamp))
+# logdir = os.path.join('data', 'autograph', stamp)
 
+# We recommend using pathlib under Python3
+from pathlib import Path
+stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+logdir = str(Path('../data/autograph/' + stamp))
+
+print(logdir)
 tensorboard_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
 
 model.compile(
@@ -177,8 +263,12 @@ model.compile(
         metrics=["accuracy"]
     )
 
-history = model.fit(ds_train,epochs= 10,validation_data=ds_test,
-                    callbacks = [tensorboard_callback],workers = 4)
+```
+
+```python
+
+history = model.fit(ds_train, epochs= 10, validation_data=ds_test,
+                    callbacks = [tensorboard_callback], workers = 4, use_multiprocessing=False)
 
 ```
 
@@ -222,9 +312,13 @@ from tensorboard import notebook
 notebook.list() 
 ```
 
+<!-- #raw -->
+
+<!-- #endraw -->
+
 ```python
 #Checking model in tensorboard
-notebook.start("--logdir ../data/keras_model")
+notebook.start("--logdir ../data/autograph")
 ```
 
 ```python

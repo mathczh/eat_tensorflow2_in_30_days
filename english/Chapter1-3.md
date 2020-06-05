@@ -93,7 +93,8 @@ ds_test = ds_test_raw.map(lambda text,label:(vectorize_layer(text),label)) \
 ```
 
 ```python
-
+import tensorflow as tf
+print ("TensorFlow version: " + tf.__version__)
 ```
 
 ### 2. Model Definition

@@ -26,10 +26,23 @@ Below is the introduction to the second method.
 ![](../data/电影评论.jpg)
 
 ```python
+import tensorflow as tf
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+  try:
+    # Currently, memory growth needs to be the same across GPUs
+    for gpu in gpus:
+      tf.config.experimental.set_memory_growth(gpu, True)
+    logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+  except RuntimeError as e:
+    # Memory growth must be set before GPUs have been initialized
+    print(e)
+
+
 import numpy as np 
 import pandas as pd 
 from matplotlib import pyplot as plt
-import tensorflow as tf
 from tensorflow.keras import models,layers,preprocessing,optimizers,losses,metrics
 from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
 import re,string
@@ -40,7 +53,6 @@ test_data_path =  "../data/imdb/test.csv"
 MAX_WORDS = 10000  # Consider the 10000 words with the highest frequency of appearance
 MAX_LEN = 200  # For each sample, preserve the first 200 words
 BATCH_SIZE = 20 
-
 
 #Constructing data pipeline
 def split_line(line):
@@ -58,7 +70,6 @@ ds_test_raw = tf.data.TextLineDataset(filenames = [test_data_path]) \
    .map(split_line,num_parallel_calls = tf.data.experimental.AUTOTUNE) \
    .batch(BATCH_SIZE) \
    .prefetch(tf.data.experimental.AUTOTUNE)
-
 
 #Constructing dictionary
 def clean_text(text):
@@ -206,11 +217,15 @@ def printbar():
     timestring = tf.strings.join([timeformat(hour),timeformat(minite),
                 timeformat(second)],separator = ":")
     tf.print("=========="*8+timestring)
+    
+### @tf.function Compiles a function into a callable TensorFlow graph.
 ```
 
 ```python
 optimizer = optimizers.Nadam()
 loss_func = losses.BinaryCrossentropy()
+
+### Nadam is Adam with Nesterov momentum.
 
 train_loss = metrics.Mean(name='train_loss')
 train_metric = metrics.BinaryAccuracy(name='train_accuracy')
@@ -221,11 +236,14 @@ valid_metric = metrics.BinaryAccuracy(name='valid_accuracy')
 
 @tf.function
 def train_step(model, features, labels):
-    with tf.GradientTape() as tape:
+    with tf.GradientTape() as tape:  
         predictions = model(features,training = True)
         loss = loss_func(labels, predictions)
+        
     gradients = tape.gradient(loss, model.trainable_variables)
+### Gradient tape: Record operations for automatic differentiation.
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+### Apply gradients to variables.
 
     train_loss.update_state(loss)
     train_metric.update_state(labels, predictions)
@@ -263,6 +281,7 @@ def train_model(model,ds_train,ds_valid,epochs):
         valid_metric.reset_states()
 
 train_model(model,ds_train,ds_test,epochs = 6)
+
 
 ```
 
@@ -332,6 +351,11 @@ Below are the available methods:
 We recommend the method `model.predict(ds_test)` since it can be applied to both Dataset and Tensor.
 
 ```python
+for x_test,_ in ds_test.take(1):
+    print(x_test)
+```
+
+```python
 model.predict(ds_test)
 ```
 
@@ -349,8 +373,8 @@ array([[0.7864823 ],
 for x_test,_ in ds_test.take(1):
     print(model(x_test))
     #Indentical expressions:
-    #print(model.call(x_test))
-    #print(model.predict_on_batch(x_test))
+    print(model.call(x_test))
+    print(model.predict_on_batch(x_test))
 ```
 
 ```

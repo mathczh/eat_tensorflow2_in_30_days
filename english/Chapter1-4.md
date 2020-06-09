@@ -31,6 +31,9 @@ import matplotlib.pyplot as plt
 import tensorflow as tf 
 from tensorflow.keras import models,layers,losses,metrics,callbacks 
 
+physical_devices = tf.config.list_physical_devices('GPU')
+tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
+
 ```
 
 ```python
@@ -54,6 +57,9 @@ dfdiff.plot(x = "date",y = ["confirmed_num","cured_num","dead_num"],figsize=(10,
 plt.xticks(rotation=60)
 dfdiff = dfdiff.drop("date",axis = 1).astype("float32")
 
+
+### Calculates the difference of a DataFrame element compared with another element in the DataFrame
+### (default is the element in the same column of the previous row).
 ```
 
 ![](../data/1-4-新增曲线.png)
@@ -115,6 +121,8 @@ x = layers.Dense(3)(x)
 x = Block()(x_input,x)
 model = models.Model(inputs = [x_input],outputs = [x])
 model.summary()
+
+### Input dimension d=3 and model hiden parameters m=3, total is 4(dm+mm+m)
 
 ```
 
@@ -529,7 +537,7 @@ dfresult.query("confirmed_num==0").head()
 ```
 
 ```python
-dfresult.query("cured_num==0").head()
+dfresult.query("cured_num==2").head()
 
 # The daily increment of the discharged (cured) cases will reduce to 0 in Day 164, which is about 4 months after March 10 (i.e. July 10) all the patients will be discharged.
 # Note: this prediction is TOO pessimistic and problematic: the total sum of the daily increment of discharged cases is larger than cumulated confirmed cases.

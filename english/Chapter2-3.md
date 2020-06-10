@@ -15,6 +15,8 @@ This is the automatic differentiate in TensorFlow.
 ```python
 import tensorflow as tf
 import numpy as np 
+physical_devices = tf.config.list_physical_devices('GPU')
+tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
 # Calculate the derivative of f(x) = a*x**2 + b*x + c
 
@@ -48,6 +50,8 @@ with tf.GradientTape() as tape:
 dy_dx,dy_da,dy_db,dy_dc = tape.gradient(y,[x,a,b,c])
 print(dy_da)
 print(dy_dc)
+print(dy_dx)
+print(dy_db)
 
 ```
 
@@ -122,7 +126,7 @@ b = tf.constant(-2.0)
 c = tf.constant(1.0)
 
 optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)
-for _ in range(1000):
+for _ in range(10000):
     with tf.GradientTape() as tape:
         y = a*tf.pow(x,2) + b*x + c
     dy_dx = tape.gradient(y,x)
@@ -157,8 +161,10 @@ def f():
 optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)   
 for _ in range(1000):
     optimizer.minimize(f,[x])   
-    
+    # This optimizer.minimize is identical to calculating gradient using tape, then call apply_gradient
 tf.print("y =",f(),"; x =",x)
+
+
 ```
 
 ```

@@ -22,6 +22,9 @@ The data type of tensor is basically corresponding to `numpy.array`.
 import numpy as np
 import tensorflow as tf
 
+physical_devices = tf.config.list_physical_devices('GPU')
+tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
+
 i = tf.constant(1) # tf.int32 type constant
 l = tf.constant(1,dtype = tf.int64) # tf.int64 type constant
 f = tf.constant(1.23) #tf.float32 type constant
@@ -142,6 +145,8 @@ The method `shape` is for checking up the size of tensor.
 h = tf.constant([123,456],dtype = tf.int32)
 f = tf.cast(h,tf.float32)
 print(h.dtype, f.dtype)
+
+### cast change the data type!
 ```
 
 ```
@@ -152,6 +157,10 @@ print(h.dtype, f.dtype)
 y = tf.constant([[1.0,2.0],[3.0,4.0]])
 print(y.numpy()) #Convert to np.array
 print(y.shape)
+
+
+### .numpy() convert to np.array()
+
 ```
 
 ```
@@ -187,6 +196,8 @@ print(id(c))
 c = c + tf.constant([1.0,1.0])
 print(c)
 print(id(c))
+
+### the same as python, constant is not changeable.
 ```
 
 ```

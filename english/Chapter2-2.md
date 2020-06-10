@@ -61,7 +61,8 @@ This is just for memorial and we do NOT recommend this way.
 
 ```python
 import tensorflow as tf
-
+physical_devices = tf.config.list_physical_devices('GPU')
+tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 g = tf.compat.v1.Graph()
 with g.as_default():
     x = tf.compat.v1.placeholder(name='x', shape=[], dtype=tf.string)
@@ -71,7 +72,7 @@ with g.as_default():
 with tf.compat.v1.Session(graph = g) as sess:
     # fetches is similar to the returning value from a function, while the placeholders in feed_dict is the input argument list to this function
     result = sess.run(fetches = z,feed_dict = {x:"hello",y:"world"})
-    print(result)
+    print(result.decode('UTF-8'))
 
 ```
 

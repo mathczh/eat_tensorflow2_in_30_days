@@ -30,7 +30,9 @@ def printbar():
 ```
 
 ```python
+CUDA_VISIBLE_DEVICES=1
 
+print(tf.__version__)
 ```
 
 ### 1. Linear Regression Model
@@ -44,6 +46,9 @@ import pandas as pd
 from matplotlib import pyplot as plt 
 import tensorflow as tf
 from tensorflow.keras import layers,losses,metrics,optimizers
+
+# physical_devices = tf.config.list_physical_devices("GPU")
+# tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
 # Number of sample
 n = 400
@@ -84,20 +89,26 @@ ds = tf.data.Dataset.from_tensor_slices((X,Y)) \
 ```
 
 ```python
-
+#     gpus = tf.config.experimental.list_physical_devices('GPU')
+#     if gpus:
+#       try:
+#         # Currently, memory growth needs to be the same across GPUs
+#         for gpu in gpus:
+#           tf.config.experimental.set_memory_growth(gpu, True)
+#         logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+#         print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+#       except RuntimeError as e:
+#         # Memory growth must be set before GPUs have been initialized
+#         print(e)
 ```
 
 **(b) Model Definition**
 
 ```python
-model = layers.Dense(units = 1) 
+model = layers.Dense(units = 1) ### unit is the dimension of the output space.
 model.build(input_shape = (2,)) #Creating variables using the build method
 model.loss_func = losses.mean_squared_error
 model.optimizer = optimizers.SGD(learning_rate=0.001)
-```
-
-```python
-
 ```
 
 **(c) Model Training**
@@ -125,6 +136,7 @@ def train_model(model,epochs):
     for epoch in tf.range(1,epochs+1):
         loss = tf.constant(0.0)
         for features, labels in ds:
+            #### label is a batch_size-by-1 matrix.
             loss = train_step(model,features,labels)
         if epoch%50==0:
             printbar()
@@ -311,8 +323,7 @@ init metric 0.5
 **(c) Model Training**
 
 ```python
-# Transform to static graph for acceleration using Autograph
-
+# Transform to static graph for acceleration using Autograph: https://github.com/tensorflow/tensorflow/issues/34519
 @tf.function
 def train_step(model, features, labels):
     with tf.GradientTape() as tape:
@@ -340,15 +351,18 @@ train_step(model,features,labels)
 ```
 
 ```python
-@tf.function
+
+## here the static will cause some issue, related to the placer. But dynamic should work. 
+#@tf.function
 def train_model(model,epochs):
     for epoch in tf.range(1,epochs+1):
         loss, metric = tf.constant(0.0),tf.constant(0.0)
         for features, labels in ds:
-            loss,metric = train_step(model,features,labels)
+            loss, metric = train_step(model,features,labels)
         if epoch%10==0:
             printbar()
             tf.print("epoch =",epoch,"loss = ",loss, "accuracy = ",metric)
+
 train_model(model,epochs = 60)
 
 ```

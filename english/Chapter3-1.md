@@ -7,6 +7,10 @@ Low-level API includes tensor operation, graph and automatic differentiates.
 ```python
 import tensorflow as tf
 
+physical_devices = tf.config.list_physical_devices("GPU")
+tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
+
+
 # Time Stamp
 @tf.function
 def printbar():
@@ -42,7 +46,6 @@ def printbar():
 import numpy as np 
 import pandas as pd
 from matplotlib import pyplot as plt 
-import tensorflow as tf
 
 
 # Number of samples
@@ -52,7 +55,8 @@ n = 400
 X = tf.random.uniform([n,2],minval=-10,maxval=10) 
 w0 = tf.constant([[2.0],[-3.0]])
 b0 = tf.constant([[3.0]])
-Y = X@w0 + b0 + tf.random.normal([n,1],mean = 0.0,stddev= 2.0)  # @ is matrix multiplication; adding Gaussian noise
+Y = X@w0 + b0 + tf.random.normal([n,1],mean = 0.0,stddev= 2.0) 
+# @ is matrix multiplication; adding Gaussian noise
 
 ```
 
@@ -85,9 +89,12 @@ def data_iter(features, labels, batch_size=8):
     indices = list(range(num_examples))
     np.random.shuffle(indices)  # Randomized reading order of the samples
     for i in range(0, num_examples, batch_size):
+        ### this aims to remove the duplicated elements.
         indexs = indices[i: min(i + batch_size, num_examples)]
         yield tf.gather(features,indexs), tf.gather(labels,indexs)
+### tf.gather can obtain the element via indices.
         
+    
 # Testing the data pipeline
 batch_size = 8
 (features,labels) = next(data_iter(X,Y,batch_size))
@@ -134,7 +141,7 @@ class LinearRegression:
     def loss_func(self,y_true,y_pred):  
         return tf.reduce_mean((y_true - y_pred)**2/2)
 
-model = LinearRegression()
+
 ```
 
 ```python
@@ -144,6 +151,8 @@ model = LinearRegression()
 **(c) Model Training**
 
 ```python
+
+model = LinearRegression()
 # Debug in dynamic graph
 def train_step(model, features, labels):
     with tf.GradientTape() as tape:
@@ -215,6 +224,8 @@ b = [[3.01013041]]
 ```
 
 ```python
+
+model = LinearRegression()
 ## Accelerate using Autograph to transform the dynamic graph into static
 
 @tf.function
@@ -225,8 +236,8 @@ def train_step(model, features, labels):
     # Back propagation to calculate the gradients
     dloss_dw,dloss_db = tape.gradient(loss,[w,b])
     # Updating parameters using gradient descending method
-    w.assign(w - 0.001*dloss_dw)
-    b.assign(b - 0.001*dloss_db)
+    w.assign(w - 0.01*dloss_dw)
+    b.assign(b - 0.01*dloss_db)
     
     return loss
 
@@ -314,7 +325,6 @@ plt.show()
 import numpy as np 
 import pandas as pd 
 from matplotlib import pyplot as plt
-import tensorflow as tf
 %matplotlib inline
 %config InlineBackend.figure_format = 'svg'
 
@@ -409,7 +419,8 @@ class DNNModel(tf.Module):
         self.b2 = tf.Variable(tf.zeros([1,8]),dtype = tf.float32)
         self.w3 = tf.Variable(tf.random.truncated_normal([8,1]),dtype = tf.float32)
         self.b3 = tf.Variable(tf.zeros([1,1]),dtype = tf.float32)
-
+        
+### initialize the variable, seems too tedious.
      
     # Forward propagation
     @tf.function(input_signature=[tf.TensorSpec(shape = [None,2], dtype = tf.float32)])  
@@ -422,8 +433,9 @@ class DNNModel(tf.Module):
     # Loss function (binary cross entropy)
     @tf.function(input_signature=[tf.TensorSpec(shape = [None,1], dtype = tf.float32),
                               tf.TensorSpec(shape = [None,1], dtype = tf.float32)])  
+### input_signature help tf trace the function, it requires tf.TensorSpec to assign the shape and type.
     def loss_func(self,y_true,y_pred):  
-        # Limiting the prediction between 1e-7 and 1 - 1e-7 to avoid the error at log(0)
+### Limiting the prediction between 1e-7 and 1 - 1e-7 to avoid the error at log(0)
         eps = 1e-7
         y_pred = tf.clip_by_value(y_pred,eps,1.0-eps)
         bce = - y_true*tf.math.log(y_pred) - (1-y_true)*tf.math.log(1-y_pred)
@@ -538,6 +550,8 @@ ax1.legend(["positive","negative"]);
 ax1.set_title("y_true");
 
 Xp_pred = tf.boolean_mask(X,tf.squeeze(model(X)>=0.5),axis = 0)
+### boolean_mask true and false obtain the elements.
+
 Xn_pred = tf.boolean_mask(X,tf.squeeze(model(X)<0.5),axis = 0)
 
 ax2.scatter(Xp_pred[:,0],Xp_pred[:,1],c = "r")

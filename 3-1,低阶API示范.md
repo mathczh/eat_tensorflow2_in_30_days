@@ -493,7 +493,6 @@ def train_step(model, features, labels):
         
     # 计算评估指标
     metric = model.metric_func(labels,predictions)
-    
     return loss, metric
 
 

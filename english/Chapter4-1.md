@@ -22,6 +22,7 @@ import numpy as np
 ```python
 a = tf.constant([1,2,3],dtype = tf.float32)
 tf.print(a)
+### tf.print prints the printable elements. 
 ```
 
 ```
@@ -62,6 +63,7 @@ a = tf.ones([3,3])
 b = tf.zeros_like(a,dtype= tf.float32)
 tf.print(a)
 tf.print(b)
+
 ```
 
 ```
@@ -87,7 +89,7 @@ tf.print(b)
 ```python
 # Random numbers with uniform distribution
 tf.random.set_seed(1.0)
-a = tf.random.uniform([5],minval=0,maxval=10)
+a = tf.random.uniform([3,3,3],minval=0,maxval=10)
 tf.print(a)
 ```
 
@@ -161,8 +163,12 @@ For the purpose of creating a new tensor through modifying certain elements in a
 
 ```python
 tf.random.set_seed(3)
-t = tf.random.uniform([5,5],minval=0,maxval=10,dtype=tf.int32)
+t = tf.random.uniform([2,2],minval=0,maxval=10,dtype=tf.int32)
 tf.print(t)
+
+### EagerTensor is immutable. 
+### but we can use where to change the value.
+tf.print(tf.where(t<5,1,t))
 ```
 
 ```
@@ -205,7 +211,7 @@ tf.print(t[1][3])
 ```python
 # From row 1 to row 3
 tf.print(t[1:4,:])
-tf.print(tf.slice(t,[1,0],[3,5])) #tf.slice(input,begin_vector,size_vector)
+tf.print(tf.slice(t,[2,0],[3,4])) #tf.slice(input,begin_vector,size_vector)
 ```
 
 ```
@@ -318,6 +324,7 @@ tf.print(scores)
 # Extract all the grades of the 0th, 5th and 9th students in each class.
 p = tf.gather(scores,[0,5,9],axis=1)
 tf.print(p)
+
 ```
 
 ```
@@ -489,8 +496,9 @@ array([[0, 0],
 
 ```python
 # Create a new tensor by replacing the value of two tensor elements located at [0,0] [2,1] as 0.
+tf.print(c)
 d = c - tf.scatter_nd([[0,0],[2,1]],[c[0,0],c[2,1]],c.shape)
-d
+tf.print(d)
 ```
 
 ```
@@ -653,7 +661,7 @@ array([[[[135, 178],
 
 ```python
 # Batch,Height,Width,Channel
-a = tf.random.uniform(shape=[100,600,600,4],minval=0,maxval=255,dtype=tf.int32)
+a = tf.random.uniform(shape=[10,60,60,4],minval=0,maxval=255,dtype=tf.int32)
 tf.print(a.shape)
 
 # Transform to the order as Channel,Height,Width,Batch
@@ -724,6 +732,7 @@ array([[[ 1.,  2.],
 
 ```python
 tf.stack([a,b,c],axis=1)
+
 ```
 
 ```
@@ -743,6 +752,7 @@ b = tf.constant([[5.0,6.0],[7.0,8.0]])
 c = tf.constant([[9.0,10.0],[11.0,12.0]])
 
 c = tf.concat([a,b,c],axis = 0)
+tf.print(c)
 ```
 
 `tf.split` is the inverse of `tf.concat`. It allows even splitting with given number of portions, or uneven splitting with given size of each portion.
@@ -765,7 +775,10 @@ tf.split(c,3,axis = 0)  # Even splitting with given number of portions
 ```
 
 ```python
-tf.split(c,[2,2,2],axis = 0) # Splitting with given size of each portion.
+q,w,e=tf.split(c,[3,2,1],axis = 0) # Splitting with given size of each portion.
+print(q)
+print(w)
+print(e)
 ```
 
 ```

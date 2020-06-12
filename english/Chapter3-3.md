@@ -229,6 +229,8 @@ ds_train = tf.data.Dataset.from_tensor_slices((X[0:n*3//4,:],Y[0:n*3//4,:])) \
      .prefetch(tf.data.experimental.AUTOTUNE) \
      .cache()
 
+### separate the data as train and valid subsets.
+
 ds_valid = tf.data.Dataset.from_tensor_slices((X[n*3//4:,:],Y[n*3//4:,:])) \
      .batch(20) \
      .prefetch(tf.data.experimental.AUTOTUNE) \
@@ -268,6 +270,18 @@ model.build(input_shape =(None,2))
 model.summary()
 ```
 
+```python
+tf.keras.backend.clear_session()
+
+model1 = models.Sequential()
+model1.add(layers.Dense(4,activation = "relu",name = "dense1",input_shape=(2,)))
+## need to specify the input_shape.
+model1.add(layers.Dense(8,activation = "relu",name = "dense2"))
+model1.add(layers.Dense(1,activation = "relu",name = "dense3"))
+model1.summary()
+
+```
+
 ```
 Model: "dnn_model"
 _________________________________________________________________
@@ -286,6 +300,9 @@ _________________________________________________________________
 ```
 
 ```python
+model1.compile(optimizer="adam",loss="mse",metrics='acc')
+model1.fit(ds_train,batch_size = 10,epochs = 200)  
+
 
 ```
 
@@ -328,20 +345,21 @@ def valid_step(model, features, labels):
     
 
 def train_model(model,ds_train,ds_valid,epochs):
+    logs = 'Epoch={},Loss:{},Accuracy:{},Valid Loss:{},Valid Accuracy:{}'
     for epoch in tf.range(1,epochs+1):
         for features, labels in ds_train:
             train_step(model,features,labels)
 
         for features, labels in ds_valid:
             valid_step(model,features,labels)
-
-        logs = 'Epoch={},Loss:{},Accuracy:{},Valid Loss:{},Valid Accuracy:{}'
-        
+       
         if  epoch%100 ==0:
+            
             printbar()
             tf.print(tf.strings.format(logs,
             (epoch,train_loss.result(),train_metric.result(),valid_loss.result(),valid_metric.result())))
-        
+### the way to print the losses
+
         train_loss.reset_states()
         valid_loss.reset_states()
         train_metric.reset_states()

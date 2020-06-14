@@ -33,7 +33,13 @@ import numpy as np
 ```python
 a = tf.constant([[1.0,2],[-3,4.0]])
 b = tf.constant([[5.0,6],[7.0,8.0]])
+tf.print(a)
+tf.print(b)
 a+b  # Operator overloading
+
+# Note that if neither x nor y is a tf.Tensor—for example if they are NumPy arrays
+# then x + y will not create a TensorFlow op. tf.add() always creates a TensorFlow op 
+# and converts its arguments to tf.Tensor objects. 
 ```
 
 ```
@@ -54,6 +60,7 @@ array([[ -4.,  -4.],
 
 ```python
 a*b 
+# element wise 
 ```
 
 ```
@@ -163,6 +170,7 @@ a = tf.constant([1.0,8.0])
 b = tf.constant([5.0,6.0])
 c = tf.constant([6.0,7.0])
 tf.add_n([a,b,c])
+## can add more than two, add can only add to.
 ```
 
 ```
@@ -190,8 +198,19 @@ tf.print(tf.minimum(a,b))
 x = tf.constant([0.9,-0.8,100.0,-20.0,0.7])
 y = tf.clip_by_value(x,clip_value_min=-1,clip_value_max=1)
 z = tf.clip_by_norm(x,clip_norm = 3)
+## Clips tensor values to a maximum L2-norm.
 tf.print(y)
 tf.print(z)
+```
+
+```python
+tf.random.set_seed(3)
+t = tf.random.uniform([2,2],minval=0,maxval=10,dtype=tf.int32)
+tf.print(t)
+
+### EagerTensor is immutable. 
+### but we can use where to change the value.
+tf.print(tf.where(t<5,1,t))
 ```
 
 ```
@@ -227,6 +246,7 @@ tf.print(tf.reduce_prod(a))
 ```python
 # "reduce" along the specific dimension
 b = tf.reshape(a,(3,3))
+tf.print(b)
 tf.print(tf.reduce_sum(b, axis=1, keepdims=True))
 tf.print(tf.reduce_sum(b, axis=0, keepdims=True))
 ```
@@ -255,6 +275,9 @@ tf.print(tf.reduce_any(q))
 # Implement tf.reduce_sum using tf.foldr
 s = tf.foldr(lambda a,b:a+b,tf.range(10)) 
 tf.print(s)
+
+# foldr on the list of tensors unpacked from elems on dimension 0. (deprecated argument values)
+# This foldr operator repeatedly applies the callable fn to a sequence of elements from last to first.
 ```
 
 ```

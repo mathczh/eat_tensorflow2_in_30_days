@@ -59,6 +59,10 @@ add_print(tf.constant(3.0))
 #add_print(tf.constant(3)) # Error: argument inconsistent with the tensor signature.
 ```
 
+```python
+
+```
+
 ```
 4
 ```
@@ -166,6 +170,10 @@ with writer.as_default():
 ```
 
 ```python
+
+```
+
+```python
 # Magic command to launch tensorboard in jupyter
 %reload_ext tensorboard
 ```
@@ -189,13 +197,13 @@ Besides using the child class of `tf.Module`, it is also possible to package thr
 
 ```python
 mymodule = tf.Module()
-mymodule.x = tf.Variable(0.0)
+mymodule.y = tf.Variable(0.0)
 
 @tf.function(input_signature=[tf.TensorSpec(shape = [], dtype = tf.float32)])  
 def addprint(a):
-    mymodule.x.assign_add(a)
-    tf.print(mymodule.x)
-    return (mymodule.x)
+    mymodule.y.assign_add(a)
+    tf.print(mymodule.y)
+    return (mymodule.y)
 
 mymodule.addprint = addprint
 ```

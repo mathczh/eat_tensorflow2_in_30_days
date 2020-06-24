@@ -39,6 +39,14 @@ for features,label in ds1.take(5):
 
 ```
 
+```python
+print(iris)
+```
+
+```python
+
+```
+
 ```
 tf.Tensor([5.1 3.5 1.4 0.2], shape=(4,), dtype=float64) tf.Tensor(0, shape=(), dtype=int64)
 tf.Tensor([4.9 3.  1.4 0.2], shape=(4,), dtype=float64) tf.Tensor(0, shape=(), dtype=int64)
@@ -64,6 +72,10 @@ ds2 = tf.data.Dataset.from_tensor_slices((dfiris.to_dict("list"),iris["target"])
 
 for features,label in ds2.take(3):
     print(features,label)
+```
+
+```python
+
 ```
 
 ```
@@ -528,7 +540,7 @@ tf.Tensor([ 9 10 11], shape=(3,), dtype=int64)
 #shuffle: shuffling the order of the data.
 
 ds = tf.data.Dataset.range(12)
-ds_shuffle = ds.shuffle(buffer_size = 5)
+ds_shuffle = ds.shuffle(buffer_size = 12)
 for x in ds_shuffle:
     print(x)
     
